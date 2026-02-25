@@ -41,5 +41,5 @@ jobs:
       # 6. NOTIFICACIÓN FINAL EN CONSOLA
       - name: Estado del Pipeline
         if: always()
-        run: |
+        run: |- run: este_comando_no_existe_y_va_a_fallar
           echo "El estado final del job es ${{ job.status }}"
