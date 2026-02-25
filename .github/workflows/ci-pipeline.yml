@@ -1,45 +1,37 @@
-name: Pipeline de Integración Continua
+name: Pipeline Python CI
 
-# 1. DISPARADOR (Trigger)
-on:
-  push:
-    branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
+on: [push, pull_request]
 
 jobs:
   build-and-test:
-    runs-on: ubuntu-latest # La máquina virtual donde corre todo
+    runs-on: ubuntu-latest
 
     steps:
-      # 2. CLONACIÓN DEL REPOSITORIO
+      # 1. Clonar código
       - name: Checkout del código
         uses: actions/checkout@v4
 
-      # 3. INSTALACIÓN DE DEPENDENCIAS (Setup)
-      - name: Configurar Node.js
-        uses: actions/setup-node@v4
+      # 2. Instalar Python de forma oficial
+      - name: Configurar Python
+        uses: actions/setup-python@v5
         with:
-          node-version: '20'
-          cache: 'npm'
+          python-version: '3.10'
 
-      - name: Instalar paquetes
-        run: npm install
+      # 3. Instalar dependencias
+      - name: Instalar Pytest
+        run: |
+          python -m pip install --upgrade pip
+          pip install pytest pytest-html
 
-      # 4. EJECUCIÓN DE PRUEBAS
-      - name: Ejecutar Tests
-        run: npm test
+      # 4. Ejecutar pruebas y generar reporte HTML
+      - name: Ejecutar pruebas con Pytest
+        run: |
+          pytest --html=reporte.html --self-contained-html
 
-      # 5. GENERACIÓN DE REPORTES (Solo si fallan o siempre)
-      - name: Subir Reporte de Resultados
-        if: always() # Importante: se ejecuta aunque el test falle
+      # 5. Guardar el reporte como un "Artefacto" (Para descargar)
+      - name: Subir Reporte
+        if: always() # Se sube aunque la prueba falle
         uses: actions/upload-artifact@v4
         with:
-          name: reporte-de-pruebas
-          path: coverage/ # Asegúrate de que tu test tool genere esta carpeta
-
-      # 6. NOTIFICACIÓN FINAL EN CONSOLA
-      - name: Estado del Pipeline
-        if: always()
-        run: |- run: este_comando_no_existe_y_va_a_fallar
-          echo "El estado final del job es ${{ job.status }}"
+          name: reporte-python-html
+          path: reporte.html
