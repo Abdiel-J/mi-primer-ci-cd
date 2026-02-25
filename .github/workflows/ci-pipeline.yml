@@ -1,8 +1,45 @@
-name: Mi Primer Pipeline
-on: [push]
+name: Pipeline de Integración Continua
+
+# 1. DISPARADOR (Trigger)
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
 jobs:
-  saludo:
-    runs-on: ubuntu-latest
+  build-and-test:
+    runs-on: ubuntu-latest # La máquina virtual donde corre todo
+
     steps:
-      - uses: actions/checkout@v4
-      - run: echo "¡Lograste configurar el pipeline!"
+      # 2. CLONACIÓN DEL REPOSITORIO
+      - name: Checkout del código
+        uses: actions/checkout@v4
+
+      # 3. INSTALACIÓN DE DEPENDENCIAS (Setup)
+      - name: Configurar Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Instalar paquetes
+        run: npm install
+
+      # 4. EJECUCIÓN DE PRUEBAS
+      - name: Ejecutar Tests
+        run: npm test
+
+      # 5. GENERACIÓN DE REPORTES (Solo si fallan o siempre)
+      - name: Subir Reporte de Resultados
+        if: always() # Importante: se ejecuta aunque el test falle
+        uses: actions/upload-artifact@v4
+        with:
+          name: reporte-de-pruebas
+          path: coverage/ # Asegúrate de que tu test tool genere esta carpeta
+
+      # 6. NOTIFICACIÓN FINAL EN CONSOLA
+      - name: Estado del Pipeline
+        if: always()
+        run: |
+          echo "El estado final del job es ${{ job.status }}"
